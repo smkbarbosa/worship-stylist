@@ -152,8 +152,8 @@ const App = () => {
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
+      while (heightLeft > 0) {
+        position = -pageHeight + (imgHeight - heightLeft);
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
@@ -343,7 +343,7 @@ const App = () => {
       </main>
 
       {/* Seção oculta para gerar o PDF */}
-      <div ref={pdfContentRef} className="absolute left-[-9999px] top-[-9999px] w-[794px] h-[1123px] p-10 bg-white" style={{ display: isGeneratingPdf ? 'block' : 'none' }}>
+      <div ref={pdfContentRef} className="absolute left-[-9999px] top-[-9999px] w-[595px] p-10 bg-white" style={{ display: isGeneratingPdf ? 'block' : 'none' }}>
         <h1 className="text-4xl font-bold text-indigo-700 text-center mb-8">Worship Service Styles</h1>
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Paleta Selecionada</h2>
@@ -367,7 +367,7 @@ const App = () => {
         </div>
         <div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Observações</h2>
-          <p className="text-gray-700">{currentNotes || 'Nenhuma observação.'}</p>
+          <p className="text-gray-700" style={{ fontSize: '14px' }}>{currentNotes || 'Nenhuma observação.'}</p>
         </div>
       </div>
     </div>
