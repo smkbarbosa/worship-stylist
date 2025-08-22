@@ -16,7 +16,7 @@ const App = () => {
 
   // Estados para gerenciar a paleta atual, o histórico e a visualização
   const [currentColors, setCurrentColors] = useState(initialColors);
-  const [currentImages, setCurrentImages] = useState([]); // This state is no longer used for the main functionality
+  const [currentImages, setCurrentImages] = useState([]); // Este estado não é mais usado para a funcionalidade principal
   const [currentNotes, setCurrentNotes] = useState('');
   const [history, setHistory] = useState([]);
   const [isHistoryView, setIsHistoryView] = useState(false);
@@ -107,7 +107,7 @@ const App = () => {
   // Função para carregar uma paleta do histórico
   const loadPalette = (palette) => {
     setCurrentColors(palette.colors);
-    setCurrentImages([]); // Clear this state as it's no longer used
+    setCurrentImages([]); // Limpa este estado, pois ele não é mais usado
     setCurrentNotes(palette.notes);
     setIsHistoryView(false);
   };
@@ -127,6 +127,7 @@ const App = () => {
   // Função para gerar o PDF
   const generatePDF = async () => {
     setIsGeneratingPdf(true);
+    // Pequeno atraso para garantir que o conteúdo oculto foi renderizado
     await new Promise(resolve => setTimeout(resolve, 100));
 
     const content = pdfContentRef.current;
@@ -134,30 +135,36 @@ const App = () => {
       const canvas = await html2canvas(content, {
         scale: 2,
         useCORS: true,
-        logging: true
+        logging: true,
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      // Converte o canvas para uma imagem JPEG para reduzir o tamanho do arquivo
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'px',
         format: 'a4'
       });
+      
       const imgWidth = 595;
       const pageHeight = 842;
       const imgHeight = canvas.height * imgWidth / canvas.width;
       let heightLeft = imgHeight;
       let position = 0;
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      // Adiciona a primeira imagem
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
 
+      // Adiciona novas páginas se o conteúdo for maior que uma página
       while (heightLeft > 0) {
-        position = -pageHeight + (imgHeight - heightLeft);
+        position = position - pageHeight; // O principal ajuste: subtraímos a altura da página
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
+      
       pdf.save('Worship_Service_Styles.pdf');
     }
     setIsGeneratingPdf(false);
