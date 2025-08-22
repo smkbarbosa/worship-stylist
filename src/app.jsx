@@ -147,8 +147,8 @@ const App = () => {
         format: 'a4'
       });
       
-      const imgWidth = 595;
-      const pageHeight = 842;
+      const imgWidth = 595.28; // Largura exata do A4
+      const pageHeight = 841.89; // Altura exata do A4
       const imgHeight = canvas.height * imgWidth / canvas.width;
       let heightLeft = imgHeight;
       let position = 0;
@@ -159,7 +159,7 @@ const App = () => {
 
       // Adiciona novas páginas se o conteúdo for maior que uma página
       while (heightLeft > 0) {
-        position = position - pageHeight; // O principal ajuste: subtraímos a altura da página
+        position -= pageHeight;
         pdf.addPage();
         pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
@@ -350,7 +350,7 @@ const App = () => {
       </main>
 
       {/* Seção oculta para gerar o PDF */}
-      <div ref={pdfContentRef} className="absolute left-[-9999px] top-[-9999px] w-[595px] p-10 bg-white" style={{ display: isGeneratingPdf ? 'block' : 'none' }}>
+      <div ref={pdfContentRef} className="absolute left-[-9999px] top-[-9999px] w-[595.28px] p-10 bg-white" style={{ display: isGeneratingPdf ? 'block' : 'none' }}>
         <h1 className="text-4xl font-bold text-indigo-700 text-center mb-8">Worship Service Styles</h1>
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Paleta Selecionada</h2>
