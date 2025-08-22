@@ -2,7 +2,7 @@
   "name": "worship-styles",
   "version": "1.0.0",
   "description": "A web app to manage color palettes and styles for worship services.",
-  "main": "index.js",
+  "main": "app.jsx",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
