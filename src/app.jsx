@@ -302,4 +302,51 @@ const App = () => {
                       </button>
                       <button
                         onClick={() => deletePalette(palette.id)}
-                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 text-sm fo
+                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 text-sm font-semibold rounded-full hover:bg-gray-300 transition-colors"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 italic col-span-full text-center">Nenhuma paleta salva ainda. Crie uma!</p>
+              )}
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Seção oculta para gerar o PDF */}
+      <div ref={pdfContentRef} className="absolute left-[-9999px] top-[-9999px] w-[794px] h-[1123px] p-10 bg-white" style={{ display: isGeneratingPdf ? 'block' : 'none' }}>
+        <h1 className="text-4xl font-bold text-indigo-700 text-center mb-8">Worship Service Styles</h1>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Paleta Selecionada</h2>
+          <div className="flex flex-wrap gap-4 items-center mb-4">
+            {currentColors.map((color, index) => (
+              <div key={index} className="w-24 h-24 rounded-full border-2 border-gray-300 relative" style={{ backgroundColor: color }}>
+                <span className="absolute bottom-[-20px] left-1/2 transform -translate-x-1/2 text-sm text-gray-600">{color.toUpperCase()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Imagens de Referência</h2>
+          <div className="flex flex-wrap gap-4">
+            {currentImages.map((image, index) => (
+              <div key={index} className="w-40 h-40 border border-gray-300 rounded-lg overflow-hidden">
+                <img src={image} alt={`Referência ${index}`} className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Observações</h2>
+          <p className="text-gray-700">{currentNotes || 'Nenhuma observação.'}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
