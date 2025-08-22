@@ -135,34 +135,83 @@ const App = () => {
       const canvas = await html2canvas(content, {
         scale: 2,
         useCORS: true,
-        logging: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        width: content.scrollWidth,
+        height: content.scrollHeight
       });
 
-      // Converte o canvas para uma imagem JPEG para reduzir o tamanho do arquivo
-      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      // Converte o canvas para uma imagem JPEG com qualidade otimizada
+      const imgData = canvas.toDataURL('image/JPEG', 0.95);
       
       const pdf = new jsPDF({
         orientation: 'portrait',
-        unit: 'px',
+        unit: 'mm',
         format: 'a4'
       });
       
-      const imgWidth = 595.28; // Largura exata do A4
-      const pageHeight = 841.89; // Altura exata do A4
-      const imgHeight = canvas.height * imgWidth / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // Adiciona a primeira imagem
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      // Adiciona novas páginas se o conteúdo for maior que uma página
-      while (heightLeft > 0) {
-        position -= pageHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      // Dimensões A4 em mm com margens de 2cm
+      const pageWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const margin = 20; // 2cm margins in mm
+      const contentWidth = pageWidth - (2 * margin); // 170mm
+      const contentHeight = pageHeight - (2 * margin); // 257mm
+      
+      // Calcula as dimensões da imagem respeitando as margens
+      const imgAspectRatio = canvas.width / canvas.height;
+      let imgWidth = contentWidth;
+      let imgHeight = contentWidth / imgAspectRatio;
+      
+      // Se a altura da imagem exceder o conteúdo disponível, ajusta proporcionalmente
+      if (imgHeight > contentHeight) {
+        imgHeight = contentHeight;
+        imgWidth = contentHeight * imgAspectRatio;
+      }
+      
+      let remainingHeight = imgHeight;
+      let currentY = 0;
+      let pageNum = 0;
+      
+      while (remainingHeight > 0) {
+        if (pageNum > 0) {
+          pdf.addPage();
+        }
+        
+        // Calcula a altura da seção a ser adicionada nesta página
+        const sectionHeight = Math.min(remainingHeight, contentHeight);
+        
+        // Calcula a posição Y da imagem no canvas para esta seção
+        const sourceY = currentY * (canvas.height / imgHeight);
+        const sourceHeight = sectionHeight * (canvas.height / imgHeight);
+        
+        // Cria um canvas temporário para esta seção
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = sourceHeight;
+        
+        // Desenha a seção no canvas temporário
+        tempCtx.drawImage(
+          canvas,
+          0, sourceY, canvas.width, sourceHeight,
+          0, 0, canvas.width, sourceHeight
+        );
+        
+        const sectionImgData = tempCanvas.toDataURL('image/JPEG', 0.95);
+        
+        // Adiciona a seção no PDF
+        pdf.addImage(
+          sectionImgData,
+          'JPEG',
+          margin,
+          margin,
+          imgWidth,
+          sectionHeight
+        );
+        
+        remainingHeight -= sectionHeight;
+        currentY += sectionHeight;
+        pageNum++;
       }
       
       pdf.save('Worship_Service_Styles.pdf');
@@ -350,31 +399,124 @@ const App = () => {
       </main>
 
       {/* Seção oculta para gerar o PDF */}
-      <div ref={pdfContentRef} className="absolute left-[-9999px] top-[-9999px] w-[595.28px] p-10 bg-white" style={{ display: isGeneratingPdf ? 'block' : 'none' }}>
-        <h1 className="text-4xl font-bold text-indigo-700 text-center mb-8">Worship Service Styles</h1>
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Paleta Selecionada</h2>
-          <div className="flex flex-wrap gap-4 items-center mb-4">
+      <div ref={pdfContentRef} className="absolute left-[-9999px] top-[-9999px] bg-white" style={{ 
+        display: isGeneratingPdf ? 'block' : 'none',
+        width: '170mm', // A4 width minus 2cm margins on each side
+        padding: '10mm',
+        fontSize: '12px',
+        fontFamily: 'Arial, sans-serif',
+        lineHeight: '1.4',
+        color: '#000000'
+      }}>
+        <h1 style={{ 
+          fontSize: '24px', 
+          fontWeight: 'bold', 
+          color: '#4338ca', 
+          textAlign: 'center', 
+          marginBottom: '20px',
+          pageBreakAfter: 'avoid'
+        }}>Worship Service Styles</h1>
+        
+        <div style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+          <h2 style={{ 
+            fontSize: '18px', 
+            fontWeight: 'bold', 
+            color: '#1f2937', 
+            marginBottom: '12px',
+            borderBottom: '2px solid #e5e7eb',
+            paddingBottom: '4px'
+          }}>Paleta Selecionada</h2>
+          <div style={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: '12px', 
+            alignItems: 'center', 
+            marginBottom: '12px' 
+          }}>
             {currentColors.map((colorObj, index) => (
-              <div key={index} className="w-24 h-24 rounded-full border-2 border-gray-300 relative" style={{ backgroundColor: colorObj.color }}>
-                <span className="absolute bottom-[-20px] left-1/2 transform -translate-x-1/2 text-sm text-gray-600">{colorObj.color.toUpperCase()}</span>
+              <div key={index} style={{ 
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                marginBottom: '8px'
+              }}>
+                <div style={{ 
+                  width: '60px', 
+                  height: '60px', 
+                  borderRadius: '50%', 
+                  border: '2px solid #d1d5db',
+                  backgroundColor: colorObj.color,
+                  marginBottom: '4px'
+                }}></div>
+                <span style={{ 
+                  fontSize: '10px', 
+                  color: '#4b5563',
+                  textAlign: 'center'
+                }}>{colorObj.color.toUpperCase()}</span>
               </div>
             ))}
           </div>
         </div>
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Imagens de Referência</h2>
-          <div className="flex flex-wrap gap-4">
-            {currentColors.flatMap((colorObj) => colorObj.images.map((image, index) => (
-              <div key={index} className="w-40 h-40 border border-gray-300 rounded-lg overflow-hidden">
-                <img src={image} alt={`Referência ${index}`} className="w-full h-full object-cover" />
-              </div>
-            )))}
+        
+        {currentColors.flatMap(colorObj => colorObj.images).length > 0 && (
+          <div style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+            <h2 style={{ 
+              fontSize: '18px', 
+              fontWeight: 'bold', 
+              color: '#1f2937', 
+              marginBottom: '12px',
+              borderBottom: '2px solid #e5e7eb',
+              paddingBottom: '4px'
+            }}>Imagens de Referência</h2>
+            <div style={{ 
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+              gap: '12px',
+              marginBottom: '12px'
+            }}>
+              {currentColors.flatMap((colorObj) => colorObj.images.map((image, index) => (
+                <div key={index} style={{ 
+                  border: '1px solid #d1d5db', 
+                  borderRadius: '8px', 
+                  overflow: 'hidden',
+                  pageBreakInside: 'avoid'
+                }}>
+                  <img 
+                    src={image} 
+                    alt={`Referência ${index}`} 
+                    style={{ 
+                      width: '100%', 
+                      height: '120px', 
+                      objectFit: 'cover',
+                      display: 'block'
+                    }} 
+                  />
+                </div>
+              )))}
+            </div>
           </div>
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Observações</h2>
-          <p className="text-gray-700" style={{ fontSize: '14px' }}>{currentNotes || 'Nenhuma observação.'}</p>
+        )}
+        
+        <div style={{ pageBreakInside: 'avoid' }}>
+          <h2 style={{ 
+            fontSize: '18px', 
+            fontWeight: 'bold', 
+            color: '#1f2937', 
+            marginBottom: '12px',
+            borderBottom: '2px solid #e5e7eb',
+            paddingBottom: '4px'
+          }}>Observações</h2>
+          <div style={{ 
+            fontSize: '12px',
+            color: '#374151',
+            lineHeight: '1.5',
+            backgroundColor: '#f9fafb',
+            padding: '12px',
+            borderRadius: '6px',
+            border: '1px solid #e5e7eb'
+          }}>
+            {currentNotes || 'Nenhuma observação.'}
+          </div>
         </div>
       </div>
     </div>
